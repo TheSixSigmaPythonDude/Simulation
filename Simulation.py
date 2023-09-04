@@ -55,7 +55,7 @@ def main(lines, avg_cuts_per_line, avg_cut_demand, unit_arrival_rate, days, allo
     env = simpy.Environment()
     env.process(lab_setup(env, lines, avg_days_to_process, unit_arrival_rate, allocation))
     env.run(until=days)
-    print(units_completed,'completed out of', allocation)
+    print('{:.2f}%'.format(100*units_completed/allocation),'complete','-',units_completed,'completed out of', allocation)
     return units_completed
 
 def DOE():
@@ -76,4 +76,4 @@ def DOE():
 
 if __name__ == '__main__':
     units_completed = 0
-    result = main(lines=28, avg_cuts_per_line=40, avg_cut_demand=44, unit_arrival_rate=3.4, days=60, allocation=342)
+    result = main(lines=10, avg_cuts_per_line=40, avg_cut_demand=37, unit_arrival_rate=12.88, days=24, allocation=273)
