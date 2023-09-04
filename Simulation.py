@@ -19,16 +19,16 @@ class Lab:
 # Function for defining customer 
 def unit(env, unit, lab):
     global units_completed
-    print(f"Unit {unit} enters queue at {env.now:.2f}!")
+    #print(f"Unit {unit} enters queue at {env.now:.2f}!")
     with lab.capacity.request() as request:
         yield request
-        print(f"Unit {unit} enters Lab at {env.now:.2f}")
+        #print(f"Unit {unit} enters Lab at {env.now:.2f}")
         yield env.process(lab.cross_section(unit))
-        print(f"Unit {unit} left Lab at {env.now:.2f}")
+        #print(f"Unit {unit} left Lab at {env.now:.2f}")
         units_completed += 1
 
 # Function for defining the system       
-def lab_setup(env, lines, avg_days_to_process, unit_arrival_rate):
+def lab_setup(env, lines, avg_days_to_process, unit_arrival_rate, allocation):
     lab = Lab(env, lines, avg_days_to_process)
     i = 0
     while True:
@@ -36,6 +36,8 @@ def lab_setup(env, lines, avg_days_to_process, unit_arrival_rate):
         yield env.timeout(unit_interarrival_time)
         i += 1
         env.process(unit(env, i, lab))
+        if i == allocation:
+            break
 
 def all_combinations(*args):
     combinations = list(itertools.product(*args))
@@ -48,19 +50,15 @@ def interarrival_times(arrival_rate, num_samples):
     
     return interarrival_times.tolist()
 
-def main(lines, avg_cuts_per_line, avg_cut_demand, unit_arrival_rate, days):
+def main(lines, avg_cuts_per_line, avg_cut_demand, unit_arrival_rate, days, allocation):
     avg_days_to_process = avg_cut_demand/avg_cuts_per_line
     env = simpy.Environment()
-    env.process(lab_setup(env, lines, avg_days_to_process, unit_arrival_rate))
+    env.process(lab_setup(env, lines, avg_days_to_process, unit_arrival_rate, allocation))
     env.run(until=days)
-    #print("Units completed ", str(units_completed))
+    print(units_completed,'completed out of', allocation)
     return units_completed
 
-
-if __name__ == '__main__':
-    #units_completed = 0
-    #main(lines=21, avg_cuts_per_line=40, avg_cut_demand=44, unit_arrival_rate=3.4,days=18)
-
+def DOE():
     lines = [14,21,28]
     cut_demand = [20,28,36,44]
     unit_arrival = [1.7, 2.5, 3.4]
@@ -74,3 +72,8 @@ if __name__ == '__main__':
         df.loc[ind] = combos[ind] + [comp]
 
     df.to_excel('Data.xlsx',index=False)
+
+
+if __name__ == '__main__':
+    units_completed = 0
+    result = main(lines=28, avg_cuts_per_line=40, avg_cut_demand=44, unit_arrival_rate=3.4, days=60, allocation=342)
